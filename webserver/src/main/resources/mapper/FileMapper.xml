@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="me.jjh.mapia.webserver.mapper.FileMapper">
+    <insert id="insertBoardFile" parameterType="me.jjh.mapia.webserver.dto.board.BoardFileDTO">
+        INSERT INTO BOARD_FILE (
+            BOARD_IDX,
+            ORG_FILE_NAME,
+            SAVED_FILE_NAME,
+            FILE_TYPE,
+            FILE_PATH,
+            FILE_EXTENSION,
+            FILE_SIZE,
+            FILE_CONTENT_TYPE,
+            FILE_ORDER,
+            FILE_KEY,
+            IS_DELETED,
+            CREATED_AT,
+            CREATED_IDX,
+            CREATED_ID
+        ) VALUES (
+            #{boardIdx},
+            #{orgFileName},
+            #{savedFileName},
+            #{fileType},
+            #{filePath},
+            #{fileExtension},
+            #{fileSize},
+            #{fileContentType},
+            #{fileOrder},
+            #{fileKey},
+            'N',
+            NOW(),
+            #{createdIdx},
+            #{createdId}
+        )
+    </insert>
+
+    <select id="getBoardFileListByIdx" parameterType="long" resultType="me.jjh.mapia.webserver.dto.board.BoardFileDTO">
+        SELECT
+            FILE_IDX,
+            BOARD_IDX,
+            ORG_FILE_NAME,
+            SAVED_FILE_NAME,
+            FILE_TYPE,
+            FILE_PATH,
+            FILE_EXTENSION,
+            FILE_SIZE,
+            FILE_CONTENT_TYPE,
+            FILE_ORDER,
+            FILE_KEY,
+            IS_DELETED
+        FROM
+            BOARD_FILE
+        WHERE
+            BOARD_IDX = #{boardIdx} AND IS_DELETED = 'N'
+        ORDER BY
+            FILE_ORDER ASC, FILE_IDX ASC
+    </select>
+
+    <select id="getBoardFileByKey" parameterType="String" resultType="me.jjh.mapia.webserver.dto.board.BoardFileDTO">
+        SELECT
+            FILE_IDX,
+            BOARD_IDX,
+            ORG_FILE_NAME,
+            SAVED_FILE_NAME,
+            FILE_TYPE,
+            FILE_PATH,
+            FILE_EXTENSION,
+            FILE_SIZE,
+            FILE_CONTENT_TYPE,
+            FILE_ORDER,
+            IS_DELETED
+        FROM
+            BOARD_FILE
+        WHERE
+            FILE_KEY = #{fileKey} AND IS_DELETED = 'N'
+    </select>
+
+</mapper>

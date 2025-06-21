@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="me.jjh.mapia.webserver.mapper.MemberAuthMapper">
+
+    <!-- 멤버 인증 수단 조회 (멤버 IDX)-->
+    <select id="findMemberAuthByMemberIdx" resultType="me.jjh.mapia.webserver.dto.member.MemberAuthDTO">
+        SELECT
+            MEMBER_AUTH_IDX,
+            MEMBER_IDX,
+            MEMBER_AUTH_PROVIDER,
+            MEMBER_AUTH_PROVIDER_ID,
+            MEMBER_AUTH_PASSWORD,
+            MEMBER_AUTH_ACCESS_TOKEN,
+            MEMBER_AUTH_REFRESH_TOKEN,
+            MEMBER_AUTH_EXP_AT,
+            MEMBER_AUTH_PRIMARY,
+            CREATED_AT,
+            UPDATED_AT
+        FROM
+            MEMBER_AUTH
+        WHERE
+            MEMBER_IDX = #{memberIdx}
+    </select>
+
+    <!-- 멤버 인증 수단 조회 (PROVIDER) -->
+    <select id="findMemberAuthByProvider" resultType="me.jjh.mapia.webserver.dto.member.MemberAuthDTO">
+        SELECT
+            MEMBER_AUTH_IDX,
+            MEMBER_IDX,
+            MEMBER_AUTH_PROVIDER,
+            MEMBER_AUTH_PROVIDER_ID,
+            MEMBER_AUTH_PASSWORD,
+            MEMBER_AUTH_ACCESS_TOKEN,
+            MEMBER_AUTH_REFRESH_TOKEN,
+            MEMBER_AUTH_EXP_AT,
+            MEMBER_AUTH_PRIMARY,
+            CREATED_AT,
+            UPDATED_AT
+        FROM
+            MEMBER_AUTH
+        WHERE
+            MEMBER_AUTH_PROVIDER = #{memberAuthProvider} AND
+            MEMBER_AUTH_PROVIDER_ID = #{memberAuthProviderId}
+    </select>
+
+    <!-- 멤버 인증 수단 등록 -->
+    <insert id="insertMemberAuth" parameterType="me.jjh.mapia.webserver.dto.member.MemberAuthDTO" useGeneratedKeys="true" keyProperty="memberAuthIdx">
+        INSERT INTO MEMBER_AUTH
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            MEMBER_IDX,
+            <if test="memberAuthProvider != null and memberAuthProvider != ''">MEMBER_AUTH_PROVIDER,</if>
+            <if test="memberAuthProviderId != null and memberAuthProviderId != ''">MEMBER_AUTH_PROVIDER_ID,</if>
+            <if test="memberAuthPassword != null and memberAuthPassword != ''">MEMBER_AUTH_PASSWORD,</if>
+            <if test="memberAuthAccessToken != null and memberAuthAccessToken != ''">MEMBER_AUTH_ACCESSTOKEN,</if>
+            <if test="memberAuthRefreshToken != null and memberAuthRefreshToken != ''">MEMBER_AUTH_REFRESH_TOKEN,</if>
+            <if test="memberAuthExpAt != null and memberAuthExpAt != ''">MEMBER_AUTH_EXP_AT,</if>
+            <if test="memberAuthIsPrimary != null and memberAuthIsPrimary != ''">MEMBER_AUTH_IS_PRIMARY,</if>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            #{memberIdx},
+            <if test="memberAuthProvider != null and memberAuthProvider != ''">#{memberAuthProvider},</if>
+            <if test="memberAuthProviderId != null and memberAuthProviderId != ''">#{memberAuthProviderId},</if>
+            <if test="memberAuthPassword != null and memberAuthPassword != ''">#{memberAuthPassword},</if>
+            <if test="memberAuthAccessToken != null and memberAuthAccessToken != ''">#{memberAuthAccessToken},</if>
+            <if test="memberAuthRefreshToken != null and memberAuthRefreshToken != ''">#{memberAuthRefreshToken},</if>
+            <if test="memberAuthExpAt != null and memberAuthExpAt != ''">#{memberAuthExpAt},</if>
+            <if test="memberAuthIsPrimary != null and memberAuthIsPrimary != ''">#{memberAuthIsPrimary},</if>
+        </trim>
+    </insert>
+
+</mapper>

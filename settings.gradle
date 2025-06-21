@@ -1,0 +1,2 @@
+rootProject.name = 'mapia-server'
+include 'common', 'webserver', 'gameserver'

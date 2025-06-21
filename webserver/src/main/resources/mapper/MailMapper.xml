@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="me.jjh.mapia.webserver.mapper.MailMapper">
+
+    <select id="findMailTplByKey" resultType="me.jjh.mapia.webserver.dto.mail.MailTplDTO">
+        SELECT
+            MAIL_TPL_IDX,
+            MAIL_TPL_KEY,
+            MAIL_TPL_TITLE,
+            MAIL_TPL_CONTENT,
+            CREATED_AT,
+            CREATED_IDX,
+            CREATED_ID,
+            UPDATED_AT,
+            UPDATED_IDX,
+            UPDATED_ID
+        FROM
+            MAIL_TPL
+        WHERE
+            MAIL_TPL_KEY = #{mailTplKey}
+    </select>
+
+    <insert id="insertMail" parameterType="me.jjh.mapia.webserver.dto.mail.MailDTO">
+        INSERT INTO MAIL
+        (
+            MAIL_SNDR,
+            MAIL_RECV_TYPE,
+            MAIL_RECV,
+            MAIL_TITLE,
+            MAIL_CONTENT,
+            MAIL_STATUS,
+            CREATED_IDX,
+            CREATED_ID
+        )
+        VALUES
+        (
+            #{mailSndr},
+            #{mailRecvType},
+            #{mailRecv},
+            #{mailTitle},
+            #{mailContent},
+            #{mailStatus},
+            #{createdIdx},
+            #{createdId}
+        )
+    </insert>
+
+</mapper>

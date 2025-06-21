@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="me.jjh.mapia.webserver.mapper.MemberMapper">
+
+    <!-- 계정 카운트 조회 -->
+    <select id="countMemberById" resultType="java.lang.Integer">
+        SELECT
+            COUNT(*)
+        FROM
+            MEMBER
+        WHERE
+            MEMBER_ID = #{memberId} AND IS_DELETED = 'N'
+    </select>
+
+    <!-- 계정 정보 조회(ID) -->
+    <select id="findMemberById" resultType="me.jjh.mapia.webserver.dto.member.MemberDTO">
+        SELECT
+            MEMBER_IDX,
+            MEMBER_ID,
+            MEMBER_PROFILE,
+            MEMBER_LOGIN_IP,
+            MEMBER_LOGIN_CNT,
+            MEMBER_LAST_LOGIN,
+            MEMBER_ROLE_IDX,
+            MEMBER_DEPT_IDX,
+            IS_ACTIVE,
+            IS_DELETED,
+            CREATED_AT,
+            CREATED_IDX,
+            CREATED_ID,
+            UPDATED_AT,
+            UPDATED_IDX,
+            UPDATED_ID
+        FROM
+            MEMBER
+        WHERE
+            MEMBER_ID = #{memberId}
+    </select>
+
+    <!-- 계정 정보 조회(IDX) -->
+    <select id="findMemberByIdx" resultType="me.jjh.mapia.webserver.dto.member.MemberDTO">
+        SELECT
+            MEMBER_IDX,
+            MEMBER_ID,
+            MEMBER_PROFILE,
+            MEMBER_LOGIN_IP,
+            MEMBER_LOGIN_CNT,
+            MEMBER_LAST_LOGIN,
+            MEMBER_ROLE_IDX,
+            MEMBER_DEPT_IDX,
+            IS_ACTIVE,
+            IS_DELETED,
+            CREATED_AT,
+            CREATED_IDX,
+            CREATED_ID,
+            UPDATED_AT,
+            UPDATED_IDX,
+            UPDATED_ID
+        FROM
+            MEMBER
+        WHERE
+            MEMBER_IDX = #{memberIdx}
+    </select>
+
+    <!-- 계정 정보 조회(ID, PROV, PROVID) -->
+    <select id="findMemberByIdProvider" resultType="me.jjh.mapia.webserver.dto.member.MemberDTO">
+        SELECT
+            MEMBER_IDX,
+            MEMBER_ID,
+            MEMBER_PWD,
+            MEMBER_IP,
+            MEMBER_LAST_LOGIN,
+            MEMBER_PROV,
+            MEMBER_PROV_ID,
+            MEMBER_ROLE_IDX,
+            MEMBER_DEPT_IDX,
+            IS_ACTIVE,
+            IS_DELETED,
+            CREATED_AT,
+            CREATED_IDX,
+            CREATED_ID,
+            UPDATED_AT,
+            UPDATED_IDX,
+            UPDATED_ID
+        FROM
+            MEMBER
+        WHERE
+            MEMBER_ID = #{memberId} AND IS_DELETED = 'N'
+        <if test="memberProv != null and memberProv != '' and memberProvId != null and memberProvId != ''">
+            AND MEMBER_PROV = #{memberProv}
+            AND MEMBER_PROV_ID = #{memberProvId}
+        </if>
+    </select>
+
+    <!-- 회원 등록 -->
+    <insert id="insertMember" parameterType="me.jjh.mapia.webserver.dto.member.MemberDTO" useGeneratedKeys="true" keyProperty="memberIdx">
+        INSERT INTO MEMBER
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null and memberId != ''">MEMBER_ID,</if>
+            <if test="memberLoginIp != null and memberLoginIp != ''">MEMBER_LOGIN_IP,</if>
+            <if test="memberRoleIdx != null and memberRoleIdx != ''">MEMBER_ROLE_IDX,</if>
+            <if test="isActive != null and isActive != ''">IS_ACTIVE,</if>
+            CREATED_IDX,
+            CREATED_ID
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="memberId != null and memberId != ''">#{memberId},</if>
+            <if test="memberLoginIp != null and memberLoginIp != ''">#{memberLoginIp},</if>
+            <if test="memberRoleIdx != null and memberRoleIdx != ''">#{memberRoleIdx},</if>
+            <if test="isActive != null and isActive != ''">#{isActive},</if>
+            #{createdIdx},
+            #{createdId}
+        </trim>
+    </insert>
+
+    <!-- 회원 정보 업데이트 -->
+    <update id="updateMember" parameterType="me.jjh.mapia.webserver.dto.member.MemberDTO">
+        UPDATE MEMBER
+        <set>
+            <if test="memberProfile != null and memberProfile != ''">
+                MEMBER_PROFILE = #{memberProfile},
+            </if>
+            <if test="memberLoginIp != null and memberLoginIp != ''">
+                MEMBER_LOGIN_IP = #{memberLoginIp},
+            </if>
+            <if test="memberRoleIdx != null and memberRoleIdx != ''">
+                MEMBER_ROLE_IDX = #{memberRoleIdx},
+            </if>
+            <if test="memberDeptIdx != null and memberDeptIdx != ''">
+                MEMBER_DEPT_IDX = #{memberDeptIdx},
+            </if>
+            <if test="isActive != null and isActive != ''">
+                IS_ACTIVE = #{isActive},
+            </if>
+            <if test="isDeleted != null and isDeleted != ''">
+                IS_DELETED = #{isDeleted},
+            </if>
+            UPDATED_AT = CURRENT_TIMESTAMP,
+            <if test="updatedIdx != null and updatedIdx != ''">
+                UPDATED_IDX = #{updatedIdx},
+            </if>
+            <if test="updatedId != null and updatedId != ''">
+                UPDATED_ID = #{updatedId},
+            </if>
+        </set>
+        WHERE
+            MEMBER_ID = #{memberId}
+    </update>
+
+    <!-- 회원 로그인 기본 업데이트 -->
+    <update id="updateLastLogin">
+        UPDATE MEMBER
+        <set>
+            <if test="memberLoginIp != null and memberLoginIp != ''">
+                MEMBER_LOGIN_IP = #{memberLoginIp},
+            </if>
+            <if test="memberLoginCnt != null and memberLoginCnt != ''">
+                MEMBER_LOGIN_CNT = MEMBER_LOGIN_CNT + #{memberLoginCnt},
+            </if>
+            MEMBER_LAST_LOGIN = CURRENT_TIMESTAMP,
+            UPDATED_AT = CURRENT_TIMESTAMP,
+            <if test="updatedIdx != null and updatedIdx != ''">
+                UPDATED_IDX = #{updatedIdx},
+            </if>
+            <if test="updatedId != null and updatedId != ''">
+                UPDATED_ID = #{updatedId},
+            </if>
+        </set>
+        WHERE
+            MEMBER_IDX = #{memberIdx}
+    </update>
+
+</mapper>

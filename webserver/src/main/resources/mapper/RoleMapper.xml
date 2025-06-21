@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="me.jjh.mapia.webserver.mapper.RoleMapper">
+
+    <resultMap id="RoleMap" type="me.jjh.mapia.webserver.dto.member.RoleDTO">
+        <id property="roleIdx" column="role_idx"/>
+        <result property="roleNm" column="role_nm"/>
+        <result property="roleDesc" column="role_desc"/>
+
+        <collection property="rolePerms" ofType="me.jjh.mapia.webserver.dto.member.RolePermDTO" javaType="java.util.List">
+            <id property="rolePermIdx" column="role_perm_idx"/>
+            <result property="rolePermNm" column="role_perm_nm"/>
+            <result property="rolePermDesc" column="role_perm_desc"/>
+        </collection>
+    </resultMap>
+
+    <!-- 권한 리스트 조회(role_idx) -->
+    <select id="findRoleListByIdx" resultMap="RoleMap" resultType="me.jjh.mapia.webserver.dto.member.RoleDTO">
+        SELECT
+            R.ROLE_IDX,
+            R.ROLE_NM,
+            R.ROLE_DESC,
+            RP.ROLE_PERM_IDX,
+            RP.ROLE_PERM_NM,
+            RP.ROLE_PERM_DESC
+        FROM
+            ROLE_PERM RP
+        JOIN ROLE_PERM_MAP RPM ON RP.ROLE_PERM_IDX = RPM.ROLE_PERM_IDX
+        JOIN ROLE R ON R.ROLE_IDX = RPM.ROLE_IDX
+        WHERE
+            R.ROLE_IDX = #{roleIdx}
+    </select>
+
+    <!-- 기본 권한 조회 -->
+    <select id="findDefaultRole" resultMap="RoleMap" resultType="me.jjh.mapia.webserver.dto.member.RoleDTO">
+        SELECT
+            R.ROLE_IDX,
+            R.ROLE_NM,
+            R.ROLE_DESC,
+            RP.ROLE_PERM_IDX,
+            RP.ROLE_PERM_NM,
+            RP.ROLE_PERM_DESC
+        FROM
+            ROLE R
+        JOIN ROLE_PERM_MAP RPM ON R.ROLE_IDX = RPM.ROLE_IDX
+        JOIN ROLE_PERM RP ON RPM.ROLE_PERM_IDX = RP.ROLE_PERM_IDX
+        WHERE
+            R.IS_DEFAULT = 'Y'
+    </select>
+
+</mapper>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="me.jjh.mapia.webserver.mapper.VerifyMapper">
+
+    <select id="findVerifyByToken" parameterType="string" resultType="me.jjh.mapia.webserver.dto.verify.VerifyDTO">
+        SELECT
+            VERIFY_IDX,
+            VERIFY_TYPE,
+            VERIFY_TARGET,
+            VERIFY_TOKEN,
+            VERIFY_ISSUED_AT,
+            VERIFY_EXP_AT,
+            VERIFY_IP,
+            VERIFY_CNT,
+            VERIFY_AGENT,
+            CREATED_AT,
+            CREATED_IDX,
+            CREATED_ID
+        FROM
+            VERIFY
+        WHERE
+            VERIFY_TOKEN = #{token} AND IS_ACTIVE = 'Y'
+    </select>
+
+    <insert id="insertVerify" parameterType="me.jjh.mapia.webserver.dto.verify.VerifyDTO" useGeneratedKeys="true" keyProperty="verifyIdx">
+        INSERT INTO VERIFY
+        (
+            VERIFY_TYPE,
+            VERIFY_TARGET,
+            VERIFY_TOKEN,
+            VERIFY_ISSUED_AT,
+            VERIFY_EXP_AT,
+            VERIFY_IP,
+            VERIFY_AGENT,
+            CREATED_IDX,
+            CREATED_ID
+        )
+        VALUES
+       (
+            #{verifyType},
+            #{verifyTarget},
+            #{verifyToken},
+            #{verifyIssuedAt},
+            #{verifyExpAt},
+            #{verifyIp},
+            #{verifyAgent},
+            #{createdIdx},
+            #{createdId}
+       )
+    </insert>
+
+    <update id="updateVerifyActive" parameterType="me.jjh.mapia.webserver.dto.verify.VerifyDTO">
+        UPDATE VERIFY SET
+            IS_ACTIVE = #{isActive}
+        WHERE
+            VERIFY_TOKEN = #{verifyToken}
+    </update>
+
+</mapper>

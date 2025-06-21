@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="me.jjh.mapia.webserver.mapper.BoardMapper">
+
+    <resultMap id="BoardMap" type="me.jjh.mapia.webserver.dto.board.BoardDTO">
+        <!-- board -->
+        <id property="boardIdx" column="board_idx"/>
+        <result property="boardTitle" column="board_title"/>
+        <result property="boardCont" column="board_cont"/>
+        <result property="boardViewCnt" column="board_view_cnt"/>
+        <result property="boardCmtCnt" column="board_cmt_cnt"/>
+        <result property="boardRecomCnt" column="board_recom_cnt"/>
+        <result property="cmtIsAllow" column="cmt_is_allow"/>
+        <result property="isActive" column="is_active"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="createdIdx" column="created_idx"/>
+        <result property="createdId" column="created_id"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="updatedIdx" column="updated_idx"/>
+        <result property="updatedId" column="updated_id"/>
+
+        <!-- board_ctg -->
+        <association property="boardCtg" javaType="me.jjh.mapia.webserver.dto.board.BoardCtgDTO">
+            <id property="boardCtgIdx" column="board_ctg_idx"/>
+            <result property="boardCtgType" column="board_ctg_type"/>
+            <result property="boardCtgNm" column="board_ctg_nm"/>
+            <result property="boardCtgDesc" column="board_ctg_desc"/>
+        </association>
+
+        <!-- board_tag -->
+        <association property="boardTag" javaType="me.jjh.mapia.webserver.dto.board.BoardTagDTO">
+            <id property="boardTagIdx" column="board_tag_idx"/>
+            <result property="boardTagNm" column="board_tag_nm"/>
+            <result property="boardTagDesc" column="board_tag_desc"/>
+            <result property="boardTagColor" column="board_tag_color"/>
+        </association>
+    </resultMap>
+
+    <select id="getBoardList" resultMap="BoardMap" resultType="me.jjh.mapia.webserver.dto.board.BoardDTO">
+        SELECT
+            B.BOARD_IDX,
+            B.BOARD_TITLE,
+            B.BOARD_CONT,
+            B.BOARD_VIEW_CNT,
+            B.BOARD_CMT_CNT,
+            B.BOARD_RECOM_CNT,
+            B.IS_DELETED,
+            B.CREATED_AT,
+            B.CREATED_IDX,
+            B.CREATED_ID,
+            B.UPDATED_AT,
+            B.UPDATED_IDX,
+            B.UPDATED_ID,
+            BC.BOARD_CTG_IDX,
+            BC.BOARD_CTG_TYPE,
+            BC.BOARD_CTG_NM,
+            BC.BOARD_CTG_DESC,
+            BT.BOARD_TAG_IDX,
+            BT.BOARD_TAG_NM,
+            BT.BOARD_TAG_DESC,
+            BT.BOARD_TAG_COLOR
+        FROM
+            BOARD B
+        JOIN BOARD_CTG BC ON B.BOARD_CTG_IDX = BC.BOARD_CTG_IDX AND BC.IS_DELETED = 'N' AND BC.IS_ACTIVE = 'Y'
+        LEFT JOIN BOARD_TAG BT ON B.BOARD_TAG_IDX = BT.BOARD_TAG_IDX AND BT.IS_DELETED = 'N' AND BT.IS_ACTIVE = 'Y'
+        WHERE
+            B.IS_DELETED = 'N' AND B.IS_ACTIVE = 'Y'
+            <if test="searchKeyword != null and searchKeyword != ''">
+                AND (
+                    <choose>
+                        <when test="searchType == 'title'">B.BOARD_TITLE LIKE CONCAT('%', #{searchKeyword}, '%')</when>
+                        <when test="searchType == 'content'">B.BOARD_CONT LIKE CONCAT('%', #{searchKeyword}, '%')</when>
+                        <when test="searchType == 'writer'">B.CREATED_ID LIKE CONCAT('%', #{searchKeyword}, '%')</when>
+                        <otherwise>
+                            (B.BOARD_TITLE LIKE CONCAT('%', #{searchKeyword}, '%') OR B.BOARD_CONT LIKE CONCAT('%', #{searchKeyword}, '%'))
+                        </otherwise>
+                    </choose>
+                )
+            </if>
+        <if test="searchDate != null and searchDate != ''">
+            <choose>
+                <!-- 단일 날짜 검색 -->
+                <when test="startDate != null and endDate != ''">
+                    AND DATE(B.CREATED_AT) BETWEEN #{startDate} AND #{endDate}
+                </when>
+
+                <!-- 날짜 범위 검색 -->
+                <when test="searchDate != null and searchDate != ''">
+                    AND DATE(B.CREATED_AT) = #{searchDate}
+                </when>
+            </choose>
+        </if>
+        ORDER BY
+        <choose>
+            <when test="sortBy != null and sortBy != ''">
+                B.${sortBy} ${sortOrder}
+            </when>
+            <otherwise>
+                B.BOARD_IDX DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getBoardTagList" resultType="me.jjh.mapia.webserver.dto.board.BoardTagDTO">
+        SELECT
+            BT.BOARD_TAG_IDX,
+            BC.BOARD_CTG_IDX,
+            BT.BOARD_TAG_NM,
+            BT.BOARD_TAG_DESC
+        FROM
+            BOARD_TAG BT INNER JOIN BOARD_CTG BC ON BC.BOARD_CTG_IDX = BT.BOARD_CTG_IDX and BC.BOARD_CTG_TYPE = #{ctgType}
+    </select>
+
+    <!-- boardTagIdx로 카테고리 정보 조회 -->
+    <select id="getBoardCtgByTagIdx" parameterType="long" resultType="me.jjh.mapia.webserver.dto.board.BoardCtgDTO">
+        SELECT
+            BC.BOARD_CTG_IDX,
+            BC.BOARD_CTG_TYPE,
+            BC.BOARD_CTG_NM,
+            BC.BOARD_CTG_DESC,
+            BC.IS_ACTIVE,
+            BC.IS_DELETED
+        FROM
+            BOARD_CTG BC
+                JOIN
+            BOARD_TAG BT ON BC.BOARD_CTG_IDX = BT.BOARD_CTG_IDX
+        WHERE
+            BT.BOARD_TAG_IDX = #{boardTagIdx}
+          AND BT.IS_DELETED = 'N'
+          AND BT.IS_ACTIVE = 'Y'
+          AND BC.IS_DELETED = 'N'
+          AND BC.IS_ACTIVE = 'Y'
+    </select>
+
+    <insert id="createBoard" parameterType="me.jjh.mapia.webserver.dto.board.BoardDTO" useGeneratedKeys="true" keyProperty="boardIdx">
+        INSERT INTO BOARD (
+            BOARD_CTG_IDX,
+            BOARD_TAG_IDX,
+            BOARD_TITLE,
+            BOARD_CONT,
+            CMT_IS_ALLOW,
+            IS_ACTIVE,
+            CREATED_AT,
+            CREATED_IDX,
+            CREATED_ID
+        ) VALUES (
+            #{boardCtg.boardCtgIdx},
+            #{boardTag.boardTagIdx},
+            #{boardTitle},
+            #{boardCont},
+            #{cmtIsAllow},
+            #{isActive},
+            NOW(),
+            #{createdIdx},
+            #{createdId}
+        )
+    </insert>
+
+    <select id="getBoardByIdx" resultMap="BoardMap" resultType="me.jjh.mapia.webserver.dto.board.BoardDTO">
+        SELECT
+            B.BOARD_IDX,
+            B.BOARD_TITLE,
+            B.BOARD_CONT,
+            B.BOARD_VIEW_CNT,
+            B.BOARD_CMT_CNT,
+            B.BOARD_RECOM_CNT,
+            B.CMT_IS_ALLOW,
+            B.IS_ACTIVE,
+            B.IS_DELETED,
+            B.CREATED_AT,
+            B.CREATED_IDX,
+            B.CREATED_ID,
+            B.UPDATED_AT,
+            B.UPDATED_IDX,
+            B.UPDATED_ID,
+            BC.BOARD_CTG_IDX,
+            BC.BOARD_CTG_TYPE,
+            BC.BOARD_CTG_NM,
+            BC.BOARD_CTG_DESC,
+            BT.BOARD_TAG_IDX,
+            BT.BOARD_TAG_NM,
+            BT.BOARD_TAG_DESC,
+            BT.BOARD_TAG_COLOR
+        FROM
+            BOARD B
+                JOIN BOARD_CTG BC ON B.BOARD_CTG_IDX = BC.BOARD_CTG_IDX AND BC.IS_DELETED = 'N' AND BC.IS_ACTIVE = 'Y'
+                LEFT JOIN BOARD_TAG BT ON B.BOARD_TAG_IDX = BT.BOARD_TAG_IDX AND BT.IS_DELETED = 'N' AND BT.IS_ACTIVE = 'Y'
+        WHERE
+            B.BOARD_IDX = #{boardIdx}
+          AND B.IS_DELETED = 'N'
+          AND B.IS_ACTIVE = 'Y'
+    </select>
+
+    <update id="updateBoardViewCount" parameterType="Long">
+        UPDATE BOARD
+        SET BOARD_VIEW_CNT = BOARD_VIEW_CNT + 1
+        WHERE BOARD_IDX = #{boardIdx}
+    </update>
+
+    <insert id="createCmtBoard" parameterType="me.jjh.mapia.webserver.dto.board.BoardCmtDTO" useGeneratedKeys="true" keyProperty="boardCmtIdx">
+        INSERT INTO BOARD_CMT (
+            BOARD_IDX,
+            ROOT_CMT_IDX,
+            PARENT_CMT_IDX,
+            BOARD_CMT_TO_IDX,
+            BOARD_CMT_TO_ID,
+            BOARD_CMT_CONT,
+            CREATED_AT,
+            CREATED_IDX,
+            CREATED_ID
+        ) VALUES (
+            #{boardIdx},
+            #{rootCmtIdx},
+            #{parentCmtIdx},
+            #{boardCmtToIdx},
+            #{boardCmtToId},
+            #{boardCmtCont},
+            NOW(),
+            #{createdIdx},
+            #{createdId}
+        )
+    </insert>
+
+    <select id="getBoardCmtList" parameterType="Long" resultType="me.jjh.mapia.webserver.dto.board.BoardCmtDTO">
+        SELECT
+            BC.BOARD_CMT_IDX,
+            BC.BOARD_IDX,
+            BC.ROOT_CMT_IDX,
+            BC.PARENT_CMT_IDX,
+            BC.BOARd_CMT_TO_IDX,
+            BC.BOARD_CMT_TO_ID,
+            BC.BOARD_CMT_CONT,
+            BC.IS_DELETED,
+            BC.CREATED_AT,
+            BC.CREATED_IDX,
+            BC.CREATED_ID,
+            BC.UPDATED_AT,
+            BC.UPDATED_IDX,
+            BC.UPDATED_ID,
+            CONCAT('/upload/', MF.FILE_TYPE, '/', MF.FILE_PATH, '/', MF.SAVED_FILE_NAME) AS MEMBER_PROFILE_PATH
+        FROM
+            BOARD_CMT BC LEFT JOIN MEMBER_FILE MF ON BC.CREATED_IDX = MF.MEMBER_IDX AND MF.FILE_TYPE = 'profile' AND MF.IS_DELETED = 'N'
+        WHERE
+            BC.BOARD_IDX = #{boardIdx}
+          AND BC.IS_DELETED = 'N'
+        ORDER BY
+            COALESCE(BC.ROOT_CMT_IDX, BC.BOARD_CMT_IDX) ASC,
+            BC.ROOT_CMT_IDX ASC,
+            BC.BOARD_CMT_IDX ASC
+    </select>
+
+    <select id="getBoardCmtByIdx" parameterType="Long" resultType="me.jjh.mapia.webserver.dto.board.BoardCmtDTO">
+    SELECT
+        BC.BOARD_CMT_IDX,
+        BC.BOARD_IDX,
+        BC.ROOT_CMT_IDX,
+        BC.PARENT_CMT_IDX,
+        BC.BOARD_CMT_TO_IDX,
+        BC.BOARD_CMT_TO_ID,
+        BC.BOARD_CMT_CONT,
+        BC.IS_DELETED,
+        BC.CREATED_AT,
+        BC.CREATED_IDX,
+        BC.CREATED_ID,
+        BC.UPDATED_AT,
+        BC.UPDATED_IDX,
+        BC.UPDATED_ID,
+        CONCAT('/upload/', MF.FILE_TYPE, '/', MF.FILE_PATH, '/', MF.SAVED_FILE_NAME) AS MEMBER_PROFILE_PATH
+    FROM
+        BOARD_CMT BC
+            LEFT JOIN MEMBER_FILE MF ON BC.CREATED_IDX = MF.MEMBER_IDX
+            AND MF.FILE_TYPE = 'profile'
+            AND MF.IS_DELETED = 'N'
+    WHERE
+        BC.BOARD_CMT_IDX = #{boardCmtIdx}
+      AND BC.IS_DELETED = 'N'
+    </select>
+
+</mapper>
