@@ -38,6 +38,7 @@ import java.util.function.Predicate;
 public class UserSessionUtil {
 
     private final SessionService sessionService;
+    private final ObjectMapper redisObjectMapper;
 
     /**
      * 현재 로그인된 모든 사용자 조회
@@ -115,12 +116,7 @@ public class UserSessionUtil {
             return Optional.empty();
         }
 
-        // ObjectMapper를 사용하여 Map을 DTO로 직접 변환
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule()); // LocalDateTime 처리를 위해
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        MemberResDTO memberDTO = objectMapper.convertValue(userSessionMap, MemberResDTO.class);
+        MemberResDTO memberDTO = redisObjectMapper.convertValue(userSessionMap, MemberResDTO.class);
 
         return Optional.of(memberDTO);
     }

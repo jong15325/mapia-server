@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 public class SessionService {
 
     private final RedisService redisService;
+    private final ObjectMapper redisOjectMapper;
 
     /**
      * 사용자 세션 생성 및 관리
@@ -175,8 +176,7 @@ public class SessionService {
             return null;
         }
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Object> redisMap = objectMapper.convertValue(sessionData, new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> redisMap = redisOjectMapper.convertValue(sessionData, new TypeReference<Map<String, Object>>() {});
 
         log.debug("[SESSION SERVICE - getUserSession] END");
 

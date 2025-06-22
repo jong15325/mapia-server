@@ -54,6 +54,7 @@ public class LoginController {
     private final RedisService redisService;
     private final UserSessionUtil userSessionUtil;
     private final Oauth2MemberService oauth2MemberService;
+    private final ObjectMapper redisOjectMapper;
 
     /**
      * 자체 로그인 폼
@@ -169,8 +170,7 @@ public class LoginController {
                     ));
         }
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Object> redisMap = objectMapper.convertValue(getRedis, new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> redisMap = redisOjectMapper.convertValue(getRedis, new TypeReference<Map<String, Object>>() {});
 
         /* 토큰 만료 검증 */
         String rdsVerifyExpAt = (String) redisMap.get("verifyExpAt");
@@ -248,8 +248,7 @@ public class LoginController {
             return ResponseEntity.status(ComCode.SIGNUP_EXPIRED_TOKEN.getStatus()).body(ApiResponse.error(ComCode.SIGNUP_EXPIRED_TOKEN));
         }
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Object> redisMap = objectMapper.convertValue(getRedis, new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> redisMap = redisOjectMapper.convertValue(getRedis, new TypeReference<Map<String, Object>>() {});
 
         /* 토큰 검증 */
         String memberId = (String) redisMap.get("memberId");
