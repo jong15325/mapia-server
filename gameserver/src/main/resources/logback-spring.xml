@@ -46,7 +46,7 @@
     </appender>
 
     <springProfile name="local">
-        <logger name="me.jjh.mapia.webserver" level="DEBUG" />
+        <logger name="me.jjh.mapia.gameserver" level="DEBUG" />
         <root level="DEBUG">
             <appender-ref ref="CONSOLE" />
             <appender-ref ref="FILE" />
