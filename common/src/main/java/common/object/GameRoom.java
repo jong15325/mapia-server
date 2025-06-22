@@ -1,16 +1,12 @@
-package me.jjh.mapia.webserver.game.object;
+package common.object;
 
+import common.status.RoomStatus;
 import lombok.Getter;
 import lombok.Setter;
-import me.jjh.mapia.webserver.game.status.RoomStatus;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @Getter
 @Setter

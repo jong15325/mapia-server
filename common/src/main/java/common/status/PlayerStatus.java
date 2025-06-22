@@ -1,4 +1,4 @@
-package me.jjh.mapia.webserver.game.status;
+package common.status;
 
 public enum PlayerStatus {
     WAITING, READY, PLAYING

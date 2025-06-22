@@ -1,9 +1,9 @@
-package me.jjh.mapia.webserver.game.object;
+package common.object;
 
+
+import common.status.PlayerStatus;
 import lombok.Getter;
 import lombok.Setter;
-import me.jjh.mapia.webserver.dto.member.MemberDTO;
-import me.jjh.mapia.webserver.game.status.PlayerStatus;
 
 import java.time.LocalDateTime;
 
