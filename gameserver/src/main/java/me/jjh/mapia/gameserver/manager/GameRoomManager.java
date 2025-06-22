@@ -1,9 +1,9 @@
 package me.jjh.mapia.gameserver.manager;
 
+import common.object.GamePlayer;
+import common.object.GameRoom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import me.jjh.mapia.gameserver.object.GamePlayer;
-import me.jjh.mapia.gameserver.object.GameRoom;
 import me.jjh.mapia.gameserver.service.redis.RedisService;
 import me.jjh.mapia.gameserver.util.DataVaildUtil;
 import org.springframework.stereotype.Component;

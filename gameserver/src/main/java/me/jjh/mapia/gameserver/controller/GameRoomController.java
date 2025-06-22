@@ -1,11 +1,9 @@
 package me.jjh.mapia.gameserver.controller;
 
+import common.object.GameRoom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import me.jjh.mapia.gameserver.object.GamePlayer;
-import me.jjh.mapia.gameserver.object.GameRoom;
 import me.jjh.mapia.gameserver.service.room.GameRoomService;
-import me.jjh.mapia.gameserver.status.RoomStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
@@ -38,7 +36,8 @@ public class GameRoomController {
                                 room.getRoomTitle(),
                                 room.getRoomPlayerNum(),
                                 room.getRoomMaxPlayerNum(),
-                                room.getRoomStatus());
+                                room.getRoomStatus()
+                        );
                     });
                 })
                 .map(rooms -> {

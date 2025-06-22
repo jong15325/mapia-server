@@ -1,12 +1,12 @@
 package me.jjh.mapia.webserver.game.controller;
 
+import common.object.GamePlayer;
+import common.object.GameRoom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.jjh.mapia.webserver.common.code.AlertType;
 import me.jjh.mapia.webserver.common.code.ComCode;
 import me.jjh.mapia.webserver.common.response.AlertResponse;
-import me.jjh.mapia.webserver.game.object.GamePlayer;
-import me.jjh.mapia.webserver.game.object.GameRoom;
 import me.jjh.mapia.webserver.properties.GameServerProperties;
 import me.jjh.mapia.webserver.response.member.MemberResDTO;
 import me.jjh.mapia.webserver.util.ReturnUtil;
