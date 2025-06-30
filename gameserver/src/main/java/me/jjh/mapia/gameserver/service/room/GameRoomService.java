@@ -23,12 +23,16 @@ public class GameRoomService {
     // 방 생성
     public Mono<GameRoom> createRoom(GameRoom room) {
         log.debug("[GAME ROOM SERVICE - createRoom] START");
+
+        setupNewRoom(room);
+
         log.debug("[GAME ROOM SERVICE - createRoom] END");
 
         return gameRoomManager.saveRoom(room)
                 .flatMap(success -> {
                     if (success) {
-                        return setupNewRoom(room);
+                        log.info("[GAME ROOM SERVICE] 방 생성 성공 - roomId: {}, title: {}", room.getRoomId(), room.getRoomTitle());
+                        return Mono.just(room);
                     } else {
                         //log.error("[ROOM SERVICE] 방 생성 실패 - roomId: {}", roomId);
                         return Mono.error(new RuntimeException("방 생성에 실패했습니다."));
@@ -149,10 +153,7 @@ public class GameRoomService {
                 });
     }
 
-    /**
-     * 새 방 설정
-     */
-    private Mono<GameRoom> setupNewRoom(GameRoom room) {
+    private void setupNewRoom(GameRoom room) {
         String roomId = UUID.randomUUID().toString();
 
         room.setRoomId(roomId);
@@ -168,7 +169,5 @@ public class GameRoomService {
             hostPlayer.setPlayerIsHost(true);
             hostPlayer.setPlayerIsReady(false); // 호스트는 기본적으로 준비 상태가 아님
         }
-
-        return Mono.just(room);
     }
 }

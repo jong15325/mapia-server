@@ -1,36 +1,18 @@
 document.addEventListener('DOMContentLoaded', function() {
-    //connectWebSocket();
+    connectWebSocket();
 });
 
 function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}:8081/ws/rooms`;
+    const token = "asdfmklasmdlkfmaskldfmklasdmf";
+    const ws = new WebSocket(`ws://localhost:8081/game-socket?token=${token}`);
 
-    socket = new WebSocket(wsUrl);
+    socket = new WebSocket(ws);
 
-    socket.onopen = function() {
-        console.log('WebSocket connected');
-    };
-
-    socket.onmessage = function(event) {
-        try {
-            const room = JSON.parse(event.data);
-            rooms.set(room.roomId, room);
-            renderRooms();
-        } catch (error) {
-            console.error('Failed to parse room update:', error);
-        }
-    };
-
-    socket.onclose = function() {
-        console.log('WebSocket disconnected');
-        // 재연결 로직
-        setTimeout(connectWebSocket, 3000);
-    };
-
-    socket.onerror = function(error) {
-        console.error('WebSocket error:', error);
-    };
+    ws.send(JSON.stringify({
+        type: "ROOM",
+        action: "JOIN_ROOM",
+        data: { roomId: "room123" }
+    }));
 }
 
 function createRoom() {
