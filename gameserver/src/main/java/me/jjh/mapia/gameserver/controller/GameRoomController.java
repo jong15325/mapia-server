@@ -22,8 +22,6 @@ public class GameRoomController {
     public Mono<ResponseEntity<List<GameRoom>>> list() {
         log.debug("[GAME ROOM CONTROLLER - list] START");
 
-        List<GameRoom> dummyRooms = new ArrayList<>();
-
         log.debug("[GAME ROOM CONTROLLER - list] END");
 
         return gameRoomService.getAllRooms()
@@ -55,9 +53,9 @@ public class GameRoomController {
 
         log.debug("[GAME ROOM CONTROLLER - create] START");
 
-        log.debug("[ROOM CREATE] roomId: {}", room.getRoomId());
         log.debug("[ROOM CREATE] title: {}, pwd: {}", room.getRoomTitle(), room.getRoomPwd());
         log.debug("[ROOM CREATE] players size: {}", room.getRoomPlayer() != null ? room.getRoomPlayer().size() : 0);
+        log.debug("[ROOM CREATE] maxPlayer size: {}", room.getRoomMaxPlayerNum() != 0 ? room.getRoomMaxPlayerNum() : 0);
 
         if (room.getRoomPlayer() != null) {
             room.getRoomPlayer().forEach((player) -> {
@@ -75,10 +73,23 @@ public class GameRoomController {
 
         return gameRoomService.createRoom(room)
                 .map(createdRoom -> ResponseEntity.ok(Map.of(
-                        "common/status", 200,
+                        "status", "OK",
                         "message", "방 생성 완료",
                         "roomId", createdRoom.getRoomId()
                 )));
         //return ResponseEntity.ok(Map.of("status", 200, "message", "방 생성 및 브로드캐스트 완료"));
+    }
+
+    @PostMapping("/deleteAllRooms")
+    public Mono<ResponseEntity<?>> deleteAllRooms() {
+
+        log.debug("[GAME ROOM CONTROLLER - deleteAllRooms] START");
+        log.debug("[GAME ROOM CONTROLLER - deleteAllRooms] END");
+
+        return gameRoomService.deleteAllRooms()
+                .map(deleteRoom -> ResponseEntity.ok(Map.of(
+                        "status", "OK",
+                        "message", "모든 방 삭제 완료"
+                )));
     }
 }

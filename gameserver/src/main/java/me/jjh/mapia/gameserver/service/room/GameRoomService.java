@@ -5,86 +5,118 @@ import common.object.GameRoom;
 import common.status.RoomStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import me.jjh.mapia.gameserver.manager.GameRoomManager;
+import me.jjh.mapia.gameserver.repository.GameRoomRepository;
 import me.jjh.mapia.gameserver.util.DataVaildUtil;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+/**
+ * flatMap() - 각 방에 대해 비동기 처리
+ * doOnNext() - 성공 시 로깅
+ * doOnError() - 에러 시 로깅
+ * doFinally() - 종료 시 로깅
+ * count() - 결과 갯수
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class GameRoomService {
 
-    private final GameRoomManager gameRoomManager;
+    private final GameRoomRepository gameRoomRepository;
 
     // 방 생성
     public Mono<GameRoom> createRoom(GameRoom room) {
         log.debug("[GAME ROOM SERVICE - createRoom] START");
 
-        setupNewRoom(room);
+        if (room == null || DataVaildUtil.isStringEmpty(room.getRoomId())) {
+            log.warn("[GAME ROOM REPOSITORY - createRoom] room 객체에 문제가 발생했습니다");
+            return Mono.empty();
+        }
+
+        String roomId = UUID.randomUUID().toString();
+
+        room.setRoomId(roomId);
+        room.setRoomPlayerNum(1);
+        room.setRoomProgress(0);
+        room.setRoomStatus(RoomStatus.WAITING);
+
+        List<GamePlayer> players = new ArrayList<>();
+
+        // 호스트 플레이어 설정
+        if (!room.getRoomPlayer().isEmpty()) {
+            GamePlayer hostPlayer = room.getRoomPlayer().get(0);
+            hostPlayer.setPlayerRoomId(roomId);
+            hostPlayer.setPlayerIsHost(true);
+            hostPlayer.setPlayerIsReady(false); // 호스트는 기본적으로 준비 상태가 아님
+
+            players.add(hostPlayer);
+        }
+
+        room.setRoomPlayer(players);
 
         log.debug("[GAME ROOM SERVICE - createRoom] END");
 
-        return gameRoomManager.saveRoom(room)
+        return gameRoomRepository.createRoom(room)
                 .flatMap(success -> {
                     if (success) {
-                        log.info("[GAME ROOM SERVICE] 방 생성 성공 - roomId: {}, title: {}", room.getRoomId(), room.getRoomTitle());
+                        log.info("[GAME ROOM SERVICE] 방 생성 성공 - roomId: {}, title: {}, maxPlayer: {}", room.getRoomId(), room.getRoomTitle(), room.getRoomMaxPlayerNum());
                         return Mono.just(room);
                     } else {
                         //log.error("[ROOM SERVICE] 방 생성 실패 - roomId: {}", roomId);
                         return Mono.error(new RuntimeException("방 생성에 실패했습니다."));
                     }
-                });
+                })
+                .doOnError(error -> log.error("방 생성 실패 - title: {}, error: {}", room.getRoomTitle(), error.getMessage()));
     }
 
-    // 방 조회
-    public Mono<GameRoom> getRoom(String roomId) {
-        log.debug("[GAME ROOM SERVICE - getRoom] START");
+    // 방 검색
+    public Mono<GameRoom> selectRoom(String roomId) {
+        log.debug("[GAME ROOM SERVICE - selectRoom] START");
 
         if (DataVaildUtil.isStringEmpty(roomId)) {
-            log.warn("[ROOM SERVICE] 잘못된 roomId로 조회 시도: {}", roomId);
+            log.warn("[GAME ROOM REPOSITORY - selectRoom] 선택된 방의 ID가 존재하지 않습니다 - roomId: {}", roomId);
             return Mono.empty();
         }
 
-        log.debug("[ROOM SERVICE] 방 조회 시작 - roomId: {}", roomId);
+        log.debug("[GAME ROOM SERVICE - selectRoom] END");
 
-        log.debug("[GAME ROOM SERVICE - getRoom] END");
-
-        return gameRoomManager.getRoom(roomId)
+        return gameRoomRepository.selectRoom(roomId)
                 .doOnNext(room -> {
-                    if (room != null) {
-                        log.debug("[ROOM SERVICE] 방 조회 성공 - roomId: {}, title: {}", room.getRoomId(), room.getRoomTitle());
-                    }
-                })
-                .doOnError(error -> {
-                    log.error("[ROOM SERVICE] 방 조회 실패 - roomId: {}, error: {}", roomId, error.getMessage());
-                })
-                .switchIfEmpty(Mono.fromRunnable(() -> {
-                    log.warn("[ROOM SERVICE] 방을 찾을 수 없음 - roomId: {}", roomId);
-                }));
-    }
-
-    public Flux<GameRoom> getAllRooms() {
-        log.debug("[GAME ROOM SERVICE - getAllRooms] START");
-
-        log.debug("[GAME ROOM SERVICE - getAllRooms] END");
-
-        return gameRoomManager.getAllRooms()
-                .doOnNext(room -> {
-                    log.debug("[ROOM SERVICE] 방 조회됨 - roomId: {}, title: {}, 플레이어: {}/{}",
+                    log.debug("[GAME ROOM SERVICE - selectRoom] 방 조회됨 - roomId: {}, title: {}, 플레이어: {}/{}",
                             room.getRoomId(),
                             room.getRoomTitle(),
                             room.getRoomPlayerNum(),
                             room.getRoomMaxPlayerNum());
                 })
-                .doOnComplete(() -> {
-                    log.info("[ROOM SERVICE] 전체 방 목록 조회 완료");
+                .doOnError(error -> {
+                    log.error("[GAME ROOM SERVICE - selectRoom] 방 조회 실패 - roomId: {}, error: {}", roomId, error.getMessage());
+                })
+                .switchIfEmpty(Mono.fromRunnable(() -> {
+                    log.warn("[GAME ROOM SERVICE - selectRoom] 방을 찾을 수 없음 - roomId: {}", roomId);
+                }));
+    }
+
+    // 모든 방 검색
+    public Flux<GameRoom> getAllRooms() {
+        log.debug("[GAME ROOM SERVICE - getAllRooms] START");
+
+        log.debug("[GAME ROOM SERVICE - getAllRooms] END");
+
+        return gameRoomRepository.getAllRooms()
+                .doOnNext(room -> {
+                    log.debug("[GAME ROOM SERVICE - getAllRooms] 방 조회됨 - roomId: {}, title: {}, 플레이어: {}/{}",
+                            room.getRoomId(),
+                            room.getRoomTitle(),
+                            room.getRoomPlayerNum(),
+                            room.getRoomMaxPlayerNum());
                 })
                 .doOnError(error -> {
-                    log.error("[ROOM SERVICE] 전체 방 목록 조회 실패: {}", error.getMessage(), error);
+                    log.error("[GAME ROOM SERVICE - getAllRooms] 전체 방 목록 조회 실패: {}", error.getMessage(), error);
                 })
                 .filter(room -> room != null) // null 방 필터링
                 .sort((room1, room2) -> {
@@ -93,81 +125,68 @@ public class GameRoomService {
                 });
     }
 
+    // 방 업데이트
+    public Mono<Boolean> updateRoom(GameRoom room) {
+        log.debug("[GAME ROOM SERVICE - updateRoom] START");
+
+        if (room == null || DataVaildUtil.isStringEmpty(room.getRoomId())) {
+            log.warn("[GAME ROOM REPOSITORY - updateRoom] room 객체에 문제가 발생했습니다");
+            return Mono.just(false);
+        }
+
+        log.debug("[GAME ROOM SERVICE - updateRoom] END");
+
+        return gameRoomRepository.updateRoom(room)
+                .doOnNext(updated -> {
+                    if (updated) {
+                        log.info("[GAME ROOM SERVICE] 방 업데이트 성공 - roomId: {}, title: {}", room.getRoomId(), room.getRoomTitle());
+                    } else {
+                        log.warn("[GAME ROOM SERVICE] 방 업데이트 실패 (방이 존재하지 않음) - roomId: {}", room.getRoomId());
+                    }
+                })
+                .doOnError(error -> {
+                    log.error("[GAME ROOM SERVICE] 방 업데이트 중 오류 발생 - roomId: {}, error: {}", room.getRoomId(), error.getMessage());
+                });
+    }
+
     // 방 삭제
     public Mono<Boolean> deleteRoom(String roomId) {
         log.debug("[GAME ROOM SERVICE - deleteRoom] START");
 
         if (DataVaildUtil.isStringEmpty(roomId)) {
-            log.warn("[ROOM SERVICE] 잘못된 roomId로 삭제 시도: {}", roomId);
+            log.warn("[GAME ROOM REPOSITORY - deleteRoom] room 객체에 문제가 발생했습니다");
             return Mono.just(false);
         }
 
-        log.info("[ROOM SERVICE] 방 삭제 시작 - roomId: {}", roomId);
-
         log.debug("[GAME ROOM SERVICE - deleteRoom] END");
 
-        return gameRoomManager.deleteRoom(roomId)
-                .map(count -> {
-                    boolean deleted = count > 0;
+        return gameRoomRepository.deleteRoom(roomId)
+                .doOnNext(deleted -> {
                     if (deleted) {
-                        log.info("[ROOM SERVICE] 방 삭제 성공 - roomId: {}", roomId);
+                        log.info("[GAME ROOM SERVICE - deleteRoom] 방 삭제 성공 - roomId: {}", roomId);
                     } else {
-                        log.warn("[ROOM SERVICE] 방 삭제 실패 (방이 존재하지 않음) - roomId: {}", roomId);
+                        log.warn("[GAME ROOM SERVICE - deleteRoom] 방 삭제 실패 (방이 존재하지 않음) - roomId: {}", roomId);
                     }
-                    return deleted;
                 })
                 .doOnError(error -> {
-                    log.error("[ROOM SERVICE] 방 삭제 중 오류 발생 - roomId: {}, error: {}", roomId, error.getMessage());
+                    log.error("[GAME ROOM SERVICE] 방 삭제 중 오류 발생 - roomId: {}, error: {}", roomId, error.getMessage());
                 });
     }
 
-    // 활성 방 개수 조회
-    public Mono<Long> getActiveRoomsCount() {
-        log.debug("[ROOM SERVICE] 활성 방 개수 조회");
+    public Mono<Boolean> deleteAllRooms() {
+        log.debug("[GAME ROOM SERVICE - deleteAllRooms] START");
+        log.debug("[GAME ROOM SERVICE - deleteAllRooms] END");
 
-        return getAllRooms()
-                .filter(room -> room.getRoomStatus() != null &&
-                        room.getRoomStatus() != RoomStatus.FINISHED)
-                .count()
-                .doOnNext(count -> {
-                    log.debug("[ROOM SERVICE] 활성 방 개수: {}", count);
-                });
-    }
-
-    // 특정 조건으로 방 검색
-    public Flux<GameRoom> searchRooms(String keyword) {
-        if (DataVaildUtil.isStringEmpty(keyword)) {
-            return getAllRooms();
-        }
-
-        log.info("[ROOM SERVICE] 방 검색 시작 - keyword: {}", keyword);
-
-        return getAllRooms()
-                .filter(room -> room.getRoomTitle() != null &&
-                        room.getRoomTitle().toLowerCase().contains(keyword.toLowerCase()))
-                .doOnNext(room -> {
-                    log.debug("[ROOM SERVICE] 검색된 방 - roomId: {}, title: {}", room.getRoomId(), room.getRoomTitle());
+        return gameRoomRepository.deleteAllRooms()
+                .doOnNext(deleted -> {
+                    if (deleted) {
+                        log.info("[ROOM SERVICE - deleteAllRooms] 모든 방 삭제 성공");
+                    } else {
+                        log.warn("[ROOM SERVICE - deleteAllRooms] 모든 방 삭제 실패");
+                    }
                 })
-                .doOnComplete(() -> {
-                    log.info("[ROOM SERVICE] 방 검색 완료 - keyword: {}", keyword);
+                .doOnError(error -> {
+                    log.error("[GAME ROOM SERVICE] 모든 방 삭제 중 오류 발생 - error: {}", error.getMessage());
                 });
-    }
-
-    private void setupNewRoom(GameRoom room) {
-        String roomId = UUID.randomUUID().toString();
-
-        room.setRoomId(roomId);
-        room.setRoomPlayerNum(1);
-        room.setRoomMaxPlayerNum(8);
-        room.setRoomProgress(0);
-        room.setRoomStatus(RoomStatus.WAITING);
-
-        // 호스트 플레이어 설정
-        if (!room.getRoomPlayer().isEmpty()) {
-            GamePlayer hostPlayer = room.getRoomPlayer().get(0);
-            hostPlayer.setPlayerRoomId(roomId);
-            hostPlayer.setPlayerIsHost(true);
-            hostPlayer.setPlayerIsReady(false); // 호스트는 기본적으로 준비 상태가 아님
-        }
     }
 }
