@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import me.jjh.mapia.webserver.common.code.RedisKeyCode;
 import me.jjh.mapia.webserver.dto.verify.VerifyDTO;
 import me.jjh.mapia.webserver.properties.CryptoProperties;
+import me.jjh.mapia.webserver.response.member.MemberResDTO;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -23,9 +24,12 @@ import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -227,6 +231,30 @@ public class SecurityUtil {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("해시 알고리즘을 찾을 수 없습니다.", e);
         }
+    }
+
+    /**
+     * 게임서버 접속용 JWT 토큰 생성
+     * @param member 인증된 사용자 정보
+     * @return JWT 토큰
+     */
+    public static String generateGameAccessToken(MemberResDTO member) {
+        Date now = new Date();
+        Duration tokenDuration = RedisKeyCode.GAME_SOCKET_ACCESS.getDuration();
+        Date expAt = new Date(now.getTime() + tokenDuration.toMillis());
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("memberIdx", member.getMemberIdx());
+        claims.put("memberId", member.getMemberId());
+        claims.put("tokenType", RedisKeyCode.GAME_SOCKET_ACCESS.getType());
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(member.getMemberId())
+                .setIssuedAt(now)
+                .setExpiration(expAt)
+                .signWith(SignatureAlgorithm.HS256, getSigningKey())
+                .compact();
     }
 
 }
