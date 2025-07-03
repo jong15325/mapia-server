@@ -25,6 +25,7 @@ public enum RedisKeyCode {
     FIND_PASSWORD_EMAIL("FIND_PASSWORD", "EMAIL", "비밀번호 찾기", Duration.ofHours(1)),
     USER_SESSION("USER_SESSION", "LOGIN", "사용자 세션", Duration.ofHours(7)),
     USER_SESSION_MAP("USER_SESSION_MAP", "LOGIN", "사용자 세션맵", Duration.ofHours(7)),
+    GAME_SOCKET_ACCESS("GAME_SOCKET_ACCESS", "GAME", "게임 소켓 접속", Duration.ofMinutes(30))
 
     ;
     private final String type;
