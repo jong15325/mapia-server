@@ -25,8 +25,6 @@ public class WebSocketConfig {
         Map<String, WebSocketHandler> map = new HashMap<>();
         map.put("/game-socket", gameWebSocketHandler);
 
-        map.put("/game-socket", new AuthenticatedWebSocketHandler(gameWebSocketHandler, jwtTokenProvider));
-
         SimpleUrlHandlerMapping handlerMapping = new SimpleUrlHandlerMapping();
         handlerMapping.setOrder(1);
         handlerMapping.setUrlMap(map);
